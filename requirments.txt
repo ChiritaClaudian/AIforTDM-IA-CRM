@@ -1,0 +1,3 @@
+pandas
+numpy
+huggingface_hub
