@@ -43,8 +43,8 @@ print("Reshaped X:", X_np.shape)
 # --------------------------
 
 # normalize per-feature across entire dataset
-mean = X_np.mean(axis=(0,1), keepdims=True)
-std = X_np.std(axis=(0,1), keepdims=True) + 1e-8
+mean = X_np.mean(axis=(0, 1), keepdims=True)
+std = X_np.std(axis=(0, 1), keepdims=True) + 1e-8
 X_np = (X_np - mean) / std
 
 print("Normalized X")
@@ -62,12 +62,15 @@ X_test = torch.tensor(X_test, dtype=torch.float32)
 y_train = torch.tensor(y_train, dtype=torch.long)
 y_test = torch.tensor(y_test, dtype=torch.long)
 
-train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=64, shuffle=True)
-test_loader = DataLoader(TensorDataset(X_test, y_test), batch_size=64, shuffle=False)
+train_loader = DataLoader(TensorDataset(
+    X_train, y_train), batch_size=64, shuffle=True)
+test_loader = DataLoader(TensorDataset(X_test, y_test),
+                         batch_size=64, shuffle=False)
 
 # --------------------------
 # 6. BUILD LSTM MODEL
 # --------------------------
+
 
 class LSTMNet(nn.Module):
     def __init__(self, timesteps, features, num_classes):
@@ -85,7 +88,10 @@ class LSTMNet(nn.Module):
         x = x[:, -1, :]  # last timestep
         return self.fc(x)
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 model = LSTMNet(timesteps, features, num_classes).to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -146,3 +152,17 @@ test_loss /= total
 
 print(f"Test Loss: {test_loss:.4f}")
 print(f"Test Accuracy: {test_acc:.4f}")
+
+
+save_path = "base_lstm_member2_centralized.pt"
+torch.save({
+    "model_state_dict": model.state_dict(),
+    "mean": mean,          # normalization mean used during preprocessing
+    "std": std,            # normalization std used during preprocessing
+    "timesteps": timesteps,
+    "features": features,
+    "num_classes": num_classes,
+    "label_classes": le.classes_,
+}, save_path)
+
+print(f"\nSaved CENTRALIZED baseline model to: {save_path}")

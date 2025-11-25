@@ -209,3 +209,4 @@ data/splits/
 
 splits/*.csv
 lstm/federated/clients/*.csv
+lstm/federated/*.npz
