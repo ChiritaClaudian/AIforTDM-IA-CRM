@@ -1,3 +1,8 @@
 pandas
 numpy
 huggingface_hub
+torch
+scikit-learn
+matplotlib
+tqdm
+seaborn
