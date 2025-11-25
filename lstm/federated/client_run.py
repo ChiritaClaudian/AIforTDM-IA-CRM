@@ -1,6 +1,6 @@
 import sys
 import flwr as fl
-from lstm.federated.client import FlowerClient
+from client import FlowerClient
 
 cid = int(sys.argv[1])     # client ID passed from command line
 
