@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, TensorDataset
-from tqdm import tqdm
+# tqdm import removed
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -169,8 +169,7 @@ def train(net, trainloader, epochs, lr, device):
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     
-    train_losses = []
-    val_accuracies = []
+    train_losses = 0
     
     device = torch.device(device)
     print(f"[-] Starting training on {device}...")
@@ -179,10 +178,8 @@ def train(net, trainloader, epochs, lr, device):
         model.train()
         running_loss = 0.0
         
-        # Using tqdm for progress bar
-        pbar = tqdm(enumerate(trainloader), total=len(trainloader), desc=f"Epoch {epoch+1}/{epochs}")
-        
-        for i, (inputs, labels) in pbar:
+        # Standard loop without tqdm
+        for inputs, labels in trainloader:
             inputs, labels = inputs.to(device), labels.to(device)
             
             optimizer.zero_grad()
@@ -192,15 +189,12 @@ def train(net, trainloader, epochs, lr, device):
             optimizer.step()
             
             running_loss += loss.item()
-            
-            # Update progress bar with current loss
-            pbar.set_postfix({'loss': f"{loss.item():.4f}"})
-            
-
         
         epoch_loss = running_loss / len(trainloader)
-        train_losses.append(epoch_loss)
-        
+        train_losses += epoch_loss
+        print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f}")
+    
+    train_losses /= epochs
     return train_losses
 
 
@@ -224,4 +218,3 @@ def test(net, testloader, device):
     accuracy = correct / len(testloader.dataset)
     loss = loss / len(testloader)
     return loss, accuracy
-
