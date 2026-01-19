@@ -1,6 +1,27 @@
 import flwr as fl
 import numpy as np
 
+import torch
+from client import LSTMModel # Import your model class
+
+# 1. Define a function that saves the model weights
+def get_evaluate_fn():
+    # This runs on the server after every round
+    def evaluate(server_round, parameters, config):
+        if server_round == 1: # Save only on the final round
+            model = LSTMModel(timesteps=100, features=3, num_classes=6)
+            
+            # Convert Flower parameters back to PyTorch state_dict
+            params_dict = zip(model.state_dict().keys(), parameters)
+            state_dict = {k: torch.tensor(v) for k, v in params_dict}
+            model.load_state_dict(state_dict, strict=True)
+            
+            # Save the file
+            torch.save(model.state_dict(), "global_model_final_dp.pth")
+            print("--- Global Model Saved to global_model_final.pth ---")
+        return None # We don't need actual evaluation here, just the save
+    return evaluate
+
 # -------------------------------
 # Metric aggregation functions
 # -------------------------------
@@ -47,8 +68,8 @@ def evaluate_metrics_aggregation(metrics_list):
 # Main server code
 # -------------------------------
 if __name__ == "__main__":
-    NUM_CLIENTS = 3
-    ROUNDS = 10
+    NUM_CLIENTS = 2
+    ROUNDS = 1
 
     # Flower FedAvg strategy with custom metric aggregation
     strategy = fl.server.strategy.FedAvg(
@@ -60,6 +81,7 @@ if __name__ == "__main__":
         evaluate_metrics_aggregation_fn=evaluate_metrics_aggregation,
         fit_metrics_aggregation_fn=fit_metrics_aggregation,
         on_fit_config_fn=lambda rnd: {"local_epochs": 3},  # Number of local epochs per round
+        evaluate_fn=get_evaluate_fn(),
     )
 
     print("=== Starting Flower server ===")
